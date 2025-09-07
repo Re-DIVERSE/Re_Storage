@@ -1,0 +1,68 @@
+
+# サーバーとの接続設定
+server:
+
+  # データベースサーバーのIPアドレス
+  # 文字列
+  address: "127.0.0.1"
+
+  # データベースサーバーのポート番号
+  # 数値(1～65535)
+  port: 3306
+
+  # アクセスするデータベースの名前
+  # 文字列
+  schema: "sample"
+
+  # データベースサーバーにアクセスするためのユーザー名
+  # 文字列
+  user: "user"
+
+  # ユーザーのパスワード
+  # 文字列
+  password: "password"
+
+# データベース設定
+database:
+
+  # JDBCのクラス名
+  # 文字列
+  class_name: "org.mariadb.jdbc.Driver"
+
+  # 接続を維持する時間(分)
+  # 0未満でデフォルト値
+  # 数値
+  lifespan: 30
+
+# エンダーチェスト設定
+enderchest:
+
+  # エンダーチェスト機能の有効化
+  enable: true
+
+  # 保存するNBTのフィルター
+  # 設定がない場合、全て保存
+  # 文字列リスト
+  nbt_filter:
+    - "PublicBukkitValues"
+    - "id"
+    - "Count"
+
+  # 最大ページ数
+  # 数値
+  max_page: 54
+
+  # ページあたりの行数
+  # 数値
+  default_page: 6
+
+  # タイトル初期設定
+  # 文字列
+  default_title: "Enderchest"
+
+# アイテム管理設定
+item:
+
+  # アイテム管理方法
+  # DIVERSE_SKRIPT | DIM
+  item_mode: DIVERSE_SKRIPT

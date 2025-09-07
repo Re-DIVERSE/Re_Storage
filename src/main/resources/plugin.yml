@@ -1,0 +1,12 @@
+name: Re_Storage
+version: ${project.version}
+main: com.github.re_diverse.re_storage.Re_Storage
+api-version: 1.21
+
+commands:
+  re_storage:
+    aliases:
+      - ec
+    description: /re_storage <open>
+    permission: re_storage.enderchest
+
