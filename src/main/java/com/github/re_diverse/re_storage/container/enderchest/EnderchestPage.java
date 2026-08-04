@@ -23,6 +23,9 @@ public class EnderchestPage extends GUI implements IDiverseItemContainer {
 	// ロックモード
 	private boolean lock = false;
 
+	// 報酬受け取り専用ページ
+	static final int REWARD_PAGE = -1;
+
 	/**
 	 * エンダーチェストのページを開いているかどうかを返す
 	 * @param player プレイヤー

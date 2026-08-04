@@ -110,6 +110,7 @@ public class EnderchestListener implements Listener {
 
 		if(event.getMessage().length() > 15) {
 			event.getPlayer().sendMessage(LegacyComponentSerializer.legacyAmpersand().deserialize("&cページ名が長すぎます。(15文字以内)"));
+			event.setCancelled(true);
 			return;
 		}
 

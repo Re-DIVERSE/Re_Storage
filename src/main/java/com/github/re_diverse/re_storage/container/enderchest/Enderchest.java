@@ -34,7 +34,7 @@ public class Enderchest extends GUI {
 	 * コンストラクタ
 	 */
 	public Enderchest() {
-		super(Integer.max((EnderchestManager.maxPage / 9), 54), LegacyComponentSerializer.legacyAmpersand().deserialize("&2エンダーチェスト"));
+		super(Integer.max(((EnderchestManager.maxPage+1) / 9), 54), LegacyComponentSerializer.legacyAmpersand().deserialize("&2エンダーチェスト"));
 	}
 
 	/**
@@ -60,7 +60,7 @@ public class Enderchest extends GUI {
 		int slot = 0;
 		int pageNum;
 		if(page == 0) {
-			pageNum = 0;
+			pageNum = EnderchestPage.REWARD_PAGE;
 		}
 		else {
 			pageNum = (int)Math.floor((double)page / 45.0d) * 45;
@@ -76,7 +76,10 @@ public class Enderchest extends GUI {
 			Map<Integer, IDiverseItem<?>> mapItem = ecPage.getItems();
 			int size = mapItem.size();
 			GUIItem<Integer> item;
-			if(size >= (ecPage.row * 9)) {
+			if (pageNum == EnderchestPage.REWARD_PAGE) {
+				item = new GUIItem<>(Material.VAULT, ecPage.title);
+			}
+			else if(size >= (ecPage.row * 9)) {
 				item = new GUIItem<>(Material.RED_STAINED_GLASS_PANE, ecPage.title);
 			}
 			else if(size >= ((double)(ecPage.row * 9) * 0.75d)) {
@@ -119,6 +122,11 @@ public class Enderchest extends GUI {
 					case RENAME_PAGE:
 						if(clickedItem.getData() instanceof Integer) {
 
+							if((Integer)clickedItem.getData() == EnderchestPage.REWARD_PAGE) {
+								player.sendMessage(LegacyComponentSerializer.legacyAmpersand().deserialize("&c報酬専用ページは名前変更できません。"));
+								break;
+							}
+
 							// 名前変更モードON
 							Integer selPage = (Integer)clickedItem.getData();
 							if(!pages.containsKey(selPage)) return;
@@ -135,6 +143,11 @@ public class Enderchest extends GUI {
 
 							// 移動する場合
 							if(procPage >= 0) {
+								if((Integer)clickedItem.getData() == EnderchestPage.REWARD_PAGE) {
+									player.sendMessage(LegacyComponentSerializer.legacyAmpersand().deserialize("&c報酬専用ページは移動できません。"));
+									break;
+								}
+
 								Integer pageToNum = (Integer)clickedItem.getData();
 								if(!pages.containsKey(procPage) || !pages.containsKey(pageToNum)) return;
 
@@ -153,6 +166,10 @@ public class Enderchest extends GUI {
 							}
 							else {
 
+								if((Integer)clickedItem.getData() == EnderchestPage.REWARD_PAGE) {
+									player.sendMessage(LegacyComponentSerializer.legacyAmpersand().deserialize("&c報酬専用ページは移動できません。"));
+									break;
+								}
 								// 処理対象をセット
 								procPage = (Integer)clickedItem.getData();
 							}
@@ -266,7 +283,6 @@ public class Enderchest extends GUI {
 		EnderchestPage page = pages.get(next);
 
 		// 移動先のページを開く
-		opener.closeInventory();
 		page.show(opener);
 
 		// 移動先のページを処理対象にセット

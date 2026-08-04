@@ -59,7 +59,7 @@ public class EnderchestManager {
 			sql.append("     owner       varchar(40)   NOT NULL      ");
 			sql.append("   , page        smallint      NOT NULL      ");
 			sql.append("   , row         smallint      NOT NULL      ");
-			sql.append("   , name        varchar(30)                 ");
+			sql.append("   , name        text                        ");
 			sql.append("   , usable      smallint      NOT NULL      ");
 			sql.append("   , PRIMARY KEY(owner, page)                ");
 			sql.append(" )                                           ");
@@ -191,6 +191,9 @@ public class EnderchestManager {
 			stmtHead.close();
 
 			// ページが作成されていない場合、初期化
+			if(!ec.hasPage(EnderchestPage.REWARD_PAGE)) {
+				ec.addPage(EnderchestPage.REWARD_PAGE, defaultRow, defaultTitle.append(LegacyComponentSerializer.legacyAmpersand().deserialize("&6報酬受け取り専用")));
+			}
 			for(int i = 0; i < maxPage; i++) {
 				if(!ec.hasPage(i)) {
 					ec.addPage(i, defaultRow, defaultTitle.append(LegacyComponentSerializer.legacyAmpersand().deserialize(" " + i)));
