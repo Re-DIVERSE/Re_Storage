@@ -104,7 +104,7 @@ public class EnderchestManager {
 		String owner = uuid.toString();
 
 		// オープン
-		try (Connection con = Re_Storage.dataSource.getConnection()) {
+		try(Connection con = Re_Storage.dataSource.getConnection()) {
 
 			// SQL文作成
 			StringBuilder sql = new StringBuilder();
@@ -192,9 +192,9 @@ public class EnderchestManager {
 
 			// ページが作成されていない場合、初期化
 			if(!ec.hasPage(EnderchestPage.REWARD_PAGE)) {
-				ec.addPage(EnderchestPage.REWARD_PAGE, defaultRow, defaultTitle.append(LegacyComponentSerializer.legacyAmpersand().deserialize("&6報酬受け取り専用")));
+				ec.addPage(EnderchestPage.REWARD_PAGE, defaultRow, LegacyComponentSerializer.legacyAmpersand().deserialize("&6報酬受け取り専用"));
 			}
-			for(int i = 0; i < maxPage; i++) {
+			for(int i = 0; i <= maxPage; i++) {
 				if(!ec.hasPage(i)) {
 					ec.addPage(i, defaultRow, defaultTitle.append(LegacyComponentSerializer.legacyAmpersand().deserialize(" " + i)));
 				}
@@ -322,20 +322,12 @@ public class EnderchestManager {
 		// UUIDを文字列化
 		String owner = uuid.toString();
 
-		Connection con = null;
-		try {
+		try(Connection con = Re_Storage.dataSource.getConnection()) {
 			// エンダーチェストが存在しなければ保存しない
 			if(!enderchest.containsKey(uuid)) return false;
 
-			// オープン
-			con = Re_Storage.dataSource.getConnection();
-
-			// トランザクション開始
-			con.setAutoCommit(false);
-
 			Enderchest ec = enderchest.get(uuid);
 			if( ec == null ) {
-				con.rollback();
 				return false;
 			}
 
@@ -361,18 +353,16 @@ public class EnderchestManager {
 
 			// ロールバック・コミット
 			if (upd != 1) {
-				con.rollback();
 				return false;
 			}
 
 			// EC削除
 			if( !deleteEnderChest(con, owner) ) {
-				con.rollback();
 				return false;
 			}
 
 			// データ登録
-			for(short i = 0; i < ec.getPageCount(); i++) {
+			for(short i = EnderchestPage.REWARD_PAGE; i < ec.getPageCount() - 1; i++) {
 
 				// ページ取得
 				EnderchestPage page = ec.getPage(i);
@@ -409,7 +399,6 @@ public class EnderchestManager {
 
 				// ロールバック・コミット
 				if (count != 1) {
-					con.rollback();
 					return false;
 				}
 
@@ -437,73 +426,6 @@ public class EnderchestManager {
 					// アイテムを得る
 					ItemStack item = page.getInventory().getItem(j);
 					if(item == null || item.getType() == Material.AIR) continue;
-//					ReadWriteNBT save = NBT.createNBTObject();
-//					List<String> keys = new ArrayList<>(nbtFilter);
-//					if(!keys.isEmpty() && keys.getFirst().equals("*")) {
-//						keys.addAll(nbtItem.getKeys());
-//					}
-//					for(String key : keys) {
-//						int index;
-//						ReadableNBT nbt = nbtItem;
-//						List<String> keyLevels = new ArrayList<>();
-//						while((index = key.indexOf(';')) > 0) {
-//							keyLevels.add(key.substring(0, index));
-//							key = key.substring(index + 1);
-//						}
-//						for(String keyLevel : keyLevels) {
-//							if(nbt.getType(keyLevel) != NBTType.NBTTagCompound) {
-//								nbt = null;
-//								break;
-//							}
-//							nbt = nbt.getCompound(keyLevel);
-//						}
-//						if(nbt == null) continue;
-//						ReadWriteNBT target = save;
-//						for(String keyLevel : keyLevels) {
-//							target = target.mergeCompound(keyLevel);
-//						}
-//						switch (nbt.getType(key)) {
-//							case NBTTagString:
-//								target.setString(key, nbt.getString(key));
-//								break;
-//
-//							case NBTTagByte:
-//								target.setByte(key, nbt.getByte(key));
-//								break;
-//
-//							case NBTTagShort:
-//								target.setShort(key, nbt.getShort(key));
-//								break;
-//
-//							case NBTTagInt:
-//								target.setInteger(key, nbt.getInteger(key));
-//								break;
-//
-//							case NBTTagLong:
-//								target.setLong(key, nbt.getLong(key));
-//								break;
-//
-//							case NBTTagFloat:
-//								target.setFloat(key, nbt.getFloat(key));
-//								break;
-//
-//							case NBTTagDouble:
-//								target.setDouble(key, nbt.getDouble(key));
-//								break;
-//
-//							case NBTTagByteArray:
-//								target.setByteArray(key, nbt.getByteArray(key));
-//								break;
-//
-//							case NBTTagIntArray:
-//								target.setIntArray(key, nbt.getIntArray(key));
-//								break;
-//
-//							case NBTTagCompound:
-//								target.addCompound(key).mergeCompound(nbt.getCompound(key));
-//								break;
-//						}
-//					}
 
 					// 条件セット
 					stmtBody.setString(1, owner);
@@ -524,54 +446,32 @@ public class EnderchestManager {
 				stmtBody.close();
 			}
 
-			// 登録完了
-			con.commit();
-
 			return true;
 		}
 		catch (SQLException e) {
 			Re_Storage.getInstance().getLogger().log(Level.WARNING, "", e);
-
-			try {
-				// ロールバック
-				if(con != null)	con.rollback();
-			}
-			catch (SQLException e2) {
-				e2.printStackTrace();
-			}
 			return false;
 		}
 		finally {
-			try {
-				// トランザクション終了
-				if (con != null) {
+			try(Connection con = Re_Storage.dataSource.getConnection()) {
 
-					// SQL文作成
-					StringBuilder sql = new StringBuilder();
-					sql.append(" DELETE FROM EnderchestSync ");
-					sql.append(" WHERE  owner = ?           ");
-					PreparedStatement stmtSync = con.prepareStatement(sql.toString());
+				// SQL文作成
+				StringBuilder sql = new StringBuilder();
+				sql.append(" DELETE FROM EnderchestSync ");
+				sql.append(" WHERE  owner = ?           ");
+				PreparedStatement stmtSync = con.prepareStatement(sql.toString());
 
-					// 条件セット
-					stmtSync.setString(1, owner);
+				// 条件セット
+				stmtSync.setString(1, owner);
 
-					// SQL文実行
-					int count = stmtSync.executeUpdate();
+				// SQL文実行
+				int count = stmtSync.executeUpdate();
 
-					// クローズ
-					stmtSync.close();
-
-					// ロールバック・コミット
-					if (count != 1) {
-						con.rollback();
-					}
-
-					con.setAutoCommit(true);
-					con.close();
-				}
+				// クローズ
+				stmtSync.close();
 			}
 			catch (SQLException e) {
-				e.printStackTrace();
+				Re_Storage.getInstance().getLogger().log(Level.WARNING, "", e);
 			}
 		}
 	}
@@ -581,44 +481,36 @@ public class EnderchestManager {
 	 * @param con DB接続
 	 * @param owner 所有者
 	 */
-	private static boolean deleteEnderChest(Connection con, String owner) {
+	private static boolean deleteEnderChest(Connection con, String owner) throws SQLException {
+		// SQL文作成
+		StringBuilder sql = new StringBuilder();
+		sql.append(" DELETE FROM EnderchestHead ");
+		sql.append(" WHERE  owner = ?           ");
+		PreparedStatement stmtHead = con.prepareStatement(sql.toString());
 
-		try {
+		// 条件セット
+		stmtHead.setString(1, owner);
 
-			// SQL文作成
-			StringBuilder sql = new StringBuilder();
-			sql.append(" DELETE FROM EnderchestHead ");
-			sql.append(" WHERE  owner = ?           ");
-			PreparedStatement stmtHead = con.prepareStatement(sql.toString());
+		// SQL文実行
+		int count = stmtHead.executeUpdate();
 
-			// 条件セット
-			stmtHead.setString(1, owner);
+		// クローズ
+		stmtHead.close();
 
-			// SQL文実行
-			int count = stmtHead.executeUpdate();
+		// SQL文作成
+		sql = new StringBuilder();
+		sql.append(" DELETE FROM EnderchestBody ");
+		sql.append(" WHERE  owner = ?           ");
+		PreparedStatement stmtBody = con.prepareStatement(sql.toString());
 
-			// クローズ
-			stmtHead.close();
+		// 条件セット
+		stmtBody.setString(1, owner);
 
-			// SQL文作成
-			sql = new StringBuilder();
-			sql.append(" DELETE FROM EnderchestBody ");
-			sql.append(" WHERE  owner = ?           ");
-			PreparedStatement stmtBody = con.prepareStatement(sql.toString());
+		// SQL文実行
+		stmtBody.executeUpdate();
 
-			// 条件セット
-			stmtBody.setString(1, owner);
-
-			// SQL文実行
-			stmtBody.executeUpdate();
-
-			// クローズ
-			stmtBody.close();
-			return true;
-		}
-		catch (SQLException e) {
-			e.printStackTrace();
-			return false;
-		}
+		// クローズ
+		stmtBody.close();
+		return true;
 	}
 }

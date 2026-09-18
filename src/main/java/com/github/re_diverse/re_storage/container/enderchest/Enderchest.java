@@ -63,9 +63,9 @@ public class Enderchest extends GUI {
 			pageNum = EnderchestPage.REWARD_PAGE;
 		}
 		else {
-			pageNum = (int)Math.floor((double)page / 45.0d) * 45;
+			pageNum = (int)Math.floor((double)page / 45.0d) * 45 - 1;
 		}
-		for(int i = 0; i < Integer.min(45, pages.size()); i++) {
+		for(int i = 0; i < Integer.min(45, pages.size()+1); i++) {
 			if(!pages.containsKey(pageNum)) {
 				pageNum++;
 				break;
